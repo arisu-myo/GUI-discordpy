@@ -2,7 +2,6 @@
 import discord
 from discord.ext import commands
 import asyncio
-token = "NzcwMDY2MTY5NzkzMDg1NDcw.X5YKAg.IMn3xg-NLWxF9htDIssAlMSTAtk"
 
 
 """
