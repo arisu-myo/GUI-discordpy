@@ -1,0 +1,6 @@
+/noup
+/users
+Pipfile
+*.look
+*.db
+*.sqlite3
