@@ -103,7 +103,35 @@ class User(CipherMixin):
         return load_data
 
 
-# def login(user, password):
-#     return User().login(user, password)
+class UserData:
+    def __init__(self, data: dict, user: str, pw: str):
+        self.datas = data
+        self.status = self.status()
+        self.filename = User().create_filename(user, pw)
+
+    def __getitem__(self, key):
+        return self.datas[key]
+
+    def set_data(self, key, value):
+        self.datas[key] = value
+        User().seve(self.filename, self.datas)
+
+    def status(self):
+        if len(self.datas) == 0:
+            return 1
+        elif len(self.datas) >= 1:
+            return 0
+        else:
+            return -1
+
+
 if __name__ == '__main__':
-    print(User().create_filename("arisu", "test"))
+
+    token = "NzcwMDY2MTY5NzkzMDg1NDcw.GDdamN.3RmR8lenzAZxEujMPi_W6thaxY5SvEizHNDjHQ"
+    user = User()
+    data = user.login("", "")
+    userdata = UserData(data, "", "")
+
+    print(userdata["token"])
+    userdata.set_data("token", token)
+    print(userdata["token"])

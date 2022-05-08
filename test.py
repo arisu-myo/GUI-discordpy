@@ -1,14 +1,24 @@
 # from base64 import encode
 # from pprint import pprint
 # import time
+import ctypes
+import ctypes.wintypes
+import time
 import PySimpleGUI as sg
 from layout import LayoutGUI
 import datetime
 from threading import Thread
-from discordBOT import BOT
-
-from User import User
+import discordBOT
+# from discordBOT import BOT
+from User import User, UserData
 user = User()
+
+
+def GetLocation(TargetWindowTitle: str):
+    TargetWindowHandle = ctypes.windll.user32.FindWindowW(0, TargetWindowTitle)
+    Rectangle = ctypes.wintypes.RECT()
+    ctypes.windll.user32.GetWindowRect(TargetWindowHandle, ctypes.pointer(Rectangle))
+    return (Rectangle.left, Rectangle.top, )  # Rectangle.right, Rectangle.bottom)
 
 
 def event_time():
@@ -16,21 +26,31 @@ def event_time():
     return now
 
 
-class TestThread():
+class SubThread():
     def __init__(self):
-        self.bot = BOT()
-        self.thread = Thread(target=self.loop_event)
+        self.event_count = 0
+        self.end_flg = False
 
-    def start(self):
-        self.active = True
+    def start(self, contents):
+        self.thread = Thread(
+            target=self.loop_event,
+            args=(contents["token"],)
+        )
         self.thread.start()
 
-    def kill(self):
-        self.bot.end()
+    def close(self):
+        # discordBOT.end()
+        discordBOT.end()
+        print(f"{event_time()}終了中ですしばらくお待ちください...")
+        while True:
+            if self.end_flg:
+                break
 
-    def loop_event(self):
-        token = "NzcwMDY2MTY5NzkzMDg1NDcw.X5YKAg.IMn3xg-NLWxF9htDIssAlMSTAtk"
-        self.bot.start(token)
+    def loop_event(self, token):
+        discordBOT.start(token)
+        print(f"{event_time()}内部クリーンの為ソフトを終了します...")
+        time.sleep(1.5)
+        self.end_flg = True
 
 
 def event_signup(username, pw1, pw2):
@@ -58,15 +78,17 @@ def event_signup(username, pw1, pw2):
 
 def event_login(username, pw):
     data = user.login(username, pw)
-    if len(data) < 1:
-        sg.popup("ログインに失敗しました。")
-        return 1
+    userdata = UserData(data, username, pw)
+    if userdata.status == 1 or userdata.status == -1:
+        sg.popup("ログインできませんでした。")
+        return userdata
 
-    return 0
+    return userdata
 
 
-window = LayoutGUI.make_login()
-test00 = TestThread()
+window = LayoutGUI.make_login((-1132, 423))
+st = SubThread()
+ud = None
 
 while True:
     window.keep_on_top_set()
@@ -82,10 +104,12 @@ while True:
     if event == "ログイン":
         username = values["-UserName-"]
         pw = values["-PassWord-"]
-        status = event_login(username, pw)
+        status_obj = event_login(username, pw)
 
-        if status == 0:
-            window_main = LayoutGUI.make_main()
+        if status_obj.status == 0:
+            ud = status_obj
+            location = GetLocation(window.Title)
+            window_main = LayoutGUI.make_main(location)
             window.close()
             window = window_main
             print(f"{event_time()}ようこそユーザー樣")
@@ -108,11 +132,14 @@ while True:
 
     if event == "画面サイズ":
         print(window.size)
+        print(GetLocation(window.Title))
 
     if event == "BOTを起動":
-        test00.start()
+        st.start(ud)
 
-    if event == "設定":
-        test00.kill()
+    if event == "終了":
+        st.close()
+        break
+
 
 window.close()

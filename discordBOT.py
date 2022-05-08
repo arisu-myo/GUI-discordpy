@@ -1,21 +1,16 @@
 
+# import asyncio
 import discord
-from discord.ext import commands
-import asyncio
+from discord.ext import commands  # , tasks
+import datetime
+import tracemalloc
+
+tracemalloc.start()
 
 
-"""
-クラスとか構成が根本的に改造したいといけない？？
-Discordpyのclient.run(token)の場合は起動、コマンド動作が行える
-（一部client系の操作が効かないけど・・・）
-
-Discordpyのclient.start(*args, **kwargs)をasyncio（非同期系の処理）
-のself.loop.run_forever()で飛ばすと起動はするが、コマンド操作当を一切
-受け付けないこれを解決しないとどうしようもない
-
-最悪プロセスを作って強制終了させるっていう手も・・・・？
-
-"""
+def event_time():
+    now = str(datetime.datetime.now().strftime("%Y/%m/%d %H:%m:%S : "))
+    return now
 
 
 class VioceBot(commands.Cog, name="ボイスボッド"):
@@ -53,40 +48,65 @@ class RootUserSystem(commands.Cog, name="開発者向け機能"):
     @commands.command()
     async def logout(self, ctx):
         await ctx.message.delete()
+        await client.close()
         print("logout")
-
-        # await client.close()
         return
 
 
-class BOT():
-    def __init__(self, *args, **kwargs):
-        intents = discord.Intents.default()
-        intents.members = True
+def create_client():
+    intents = discord.Intents.default()
+    intents.members = True
 
-        self.client = commands.Bot(command_prefix="$",
-                                   intents=intents)
+    client_reb = commands.Bot(command_prefix="$",
+                              intents=intents)
+    return client_reb
 
-    def start(self, *args, **kwargs):
 
-        self.client.add_cog(RootUserSystem(self.client))
-        self.client.add_cog(VioceBot(self.client))
+client = create_client()
+client.add_cog(RootUserSystem(client))
+client.add_cog(VioceBot(client))
 
-        try:
-            self.loop = asyncio.new_event_loop()
-            # task =
-            self.loop.create_task(
-                self.client.start(*args, **kwargs))
-            self.loop.run_forever()
 
-            # self.client.run(token)
+@client.event
+async def on_ready():
+    print(f"{event_time()}BOT起動しました...")
 
-            # self.loop.run_until_complete(self.client.start(token,))
-        except KeyboardInterrupt:
-            return
 
-    def end(self, *args, **kwargs):
-        self.loop.stop()
+@client.event
+async def on_message(message):
+    if message.author.bot:
+        return
 
-    async def on_ready():
-        print("起動")
+    if "$" in message.content:
+        pass
+        # elif "<@" in message.content:
+        #    pass
+    elif message.guild.voice_client:
+        # inputtext = creat_audio(message.content)
+
+        print(f"voice_play>>{message.content}")
+        return
+    else:
+        pass
+    await client.process_commands(message)
+
+
+@ client.event
+async def on_command_error(ctx, error):
+    await ctx.send("エラーコマンド実行者:{}\n エラー詳細:{}"
+                   .format(ctx.message.author.name, error))
+
+
+def start(token):
+
+    client.loop.create_task(client.start(token))
+
+    try:
+        client.loop.run_forever()
+    finally:
+        client.loop.close()
+        print(f"{event_time()}終了が実行されました!")
+
+
+def end():
+    client.loop.stop()

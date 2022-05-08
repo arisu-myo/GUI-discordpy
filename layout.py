@@ -9,7 +9,7 @@ def soft_title():
 
 class LayoutGUI:
 
-    def make_login():
+    def make_login(location=(None, None)):
         # left = 10
         # right = 10
         # top = 100
@@ -35,7 +35,7 @@ class LayoutGUI:
             [sg.Button("画面サイズ")]
         ]
         return sg.Window(
-            soft_title(), layout, font=("Arial", 12),
+            soft_title(), layout, font=("Arial", 12), location=location,
             size=(380, 260), resizable=True, finalize=True)
 
     def make_signup():
@@ -65,7 +65,7 @@ class LayoutGUI:
             soft_title(), layout, font=("Arial", 12),
             size=(300, 300), resizable=True, finalize=True)
 
-    def make_main():
+    def make_main(location):
         layout = [
             [sg.Text("メインの画面のつもりです")],
             [sg.Output(
@@ -74,11 +74,11 @@ class LayoutGUI:
                 text_color="#008000"
             )],
             [
-                sg.Button("設定", font=("Arial", 10)),
-                sg.Button("BOTを起動", font=("Arial", 10))
+                sg.Button("終了"),
+                sg.Button("BOTを起動"),
             ]
         ]
         return sg.Window(
-            soft_title(), layout, font=("Arial", 12),
+            soft_title(), layout, font=("Arial", 12), location=location,
             size=(640, 400), resizable=True, finalize=True
         )

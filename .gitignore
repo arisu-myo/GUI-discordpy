@@ -1,6 +1,7 @@
 /noup
 /users
 Pipfile
-*.look
+*.lock
 *.db
 *.sqlite3
+User.py
